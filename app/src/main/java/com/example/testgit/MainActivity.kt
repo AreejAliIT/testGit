@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : AppCompatActivity() {
@@ -27,14 +28,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnclear: Button
     private lateinit var btnresult: Button
     private lateinit var btndel: Button
+    var result = 0f
+    var operator = ' '
+    var num1 = ""
+    var num2 = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val viewModel = ViewModelProvider(this).get(MainActivityViewModel::class.java)
 
         display = findViewById(R.id.display)
-        display.text = viewModel.displayText
 
         btn0 = findViewById(R.id.btn0)
         btn1 = findViewById(R.id.btn1)
@@ -55,33 +59,105 @@ class MainActivity : AppCompatActivity() {
         btnclear = findViewById(R.id.btnClear)
         btnresult = findViewById(R.id.btnEqu)
         btndel = findViewById(R.id.btnDelete)
-        //set the setOnClickListener for Numbers Buttons
-        btn0.setOnClickListener{viewModel.setNumber('0'); display.text = viewModel.displayText}
-        btn1.setOnClickListener{viewModel.setNumber('1'); display.text = viewModel.displayText}
-        btn2.setOnClickListener{viewModel.setNumber('2'); display.text = viewModel.displayText}
-        btn3.setOnClickListener{viewModel.setNumber('3'); display.text = viewModel.displayText}
-        btn4.setOnClickListener{viewModel.setNumber('4'); display.text = viewModel.displayText}
-        btn5.setOnClickListener{viewModel.setNumber('5'); display.text = viewModel.displayText}
-        btn6.setOnClickListener{viewModel.setNumber('6'); display.text = viewModel.displayText}
-        btn7.setOnClickListener{viewModel.setNumber('7'); display.text = viewModel.displayText}
-        btn8.setOnClickListener{viewModel.setNumber('8'); display.text = viewModel.displayText}
-        btn9.setOnClickListener{viewModel.setNumber('9'); display.text = viewModel.displayText}
+        //set Numbers Buttons
+        btn0.setOnClickListener{setNumber('0')}
+        btn1.setOnClickListener{setNumber('1')}
+        btn2.setOnClickListener{setNumber('2')}
+        btn3.setOnClickListener{setNumber('3')}
+        btn4.setOnClickListener{setNumber('4')}
+        btn5.setOnClickListener{setNumber('5')}
+        btn6.setOnClickListener{setNumber('6')}
+        btn7.setOnClickListener{setNumber('7')}
+        btn8.setOnClickListener{setNumber('8')}
+        btn9.setOnClickListener{setNumber('9')}
         //Operators
-        btnadd.setOnClickListener{ viewModel.handleOperator('+'); display.text = viewModel.displayText }
-        btnsubtract.setOnClickListener{ viewModel.handleOperator('-'); display.text = viewModel.displayText }
-        btnmultiply.setOnClickListener{ viewModel.handleOperator('*'); display.text = viewModel.displayText }
-        btndivide.setOnClickListener{ viewModel.handleOperator('/'); display.text = viewModel.displayText }
+        btnadd.setOnClickListener{setOperator('+')}
+        btnsubtract.setOnClickListener{setOperator('-')}
+        btnmultiply.setOnClickListener{setOperator('*')}
+        btndivide.setOnClickListener{setOperator('/')}
         // Decimal , +/- , DEL , =
-        btndecimal.setOnClickListener { viewModel.onClickDecimal(); display.text = viewModel.displayText }
-        btnPlusandMinus.setOnClickListener { viewModel.onClickPlusMinus(); display.text = viewModel.displayText }
-        btnclear.setOnClickListener { viewModel.clearAll(); display.text = viewModel.displayText }
-        btnresult.setOnClickListener { viewModel.calculate(); display.text = viewModel.displayText }
-        btndel.setOnClickListener { viewModel.deleteLast(); display.text = viewModel.displayText }
+        btndecimal.setOnClickListener {setDecimal()}
+        btnPlusandMinus.setOnClickListener {plusandMinus()}
+        btnclear.setOnClickListener{clearAll() }
+        btnresult.setOnClickListener{calculate()}
+        btndel.setOnClickListener{deleteLast()}
 
     }
-    private fun calculator() {
-
+     fun setNumber(num : Char) {
+        if(operator==' '){
+            num1 += num
+            display.text = num1
+        }else{
+            num2 += num
+            val text = num1 + operator + num2
+            display.text = text
+        }
     }
-
-
+    @JvmName("setOperator1")
+     fun setOperator(op: Char){
+        operator = op
+        val text = num1 + operator
+        display.text = text
+    }
+     fun calculate(){
+        when (operator) {
+            '+' -> result = num1.toFloat() + num2.toFloat()
+            '-' -> result = num1.toFloat() - num2.toFloat()
+            '*' -> result = num1.toFloat() * num2.toFloat()
+            '/' -> if(num1.toFloat()!=0f&&num2.toFloat()!=0f){
+                result = num1.toFloat() / num2.toFloat()
+            }else{
+                Toast.makeText(this, "can't divide by 0 !", Toast.LENGTH_SHORT).show()
+            }
+        }
+        num1 = result.toString()
+        num2 = ""
+        display.text = result.toString()
+    }
+     fun clearAll(){
+        result = 0f
+        operator = ' '
+        num1 = ""
+        num2 = ""
+        display.text = "0"
+    }
+     fun deleteLast(){
+        if(operator==' '){
+            if(num1.isNotEmpty()){
+                num1 = num1.substring(0, num1.length - 1)
+                if(num1.isEmpty()) {display.text = "0"} else{display.text = num1}
+            }
+        }else{
+            if(num2.isNotEmpty()){
+                num2 = num2.substring(0, num2.length - 1)
+                val text = num1 + operator + num2
+                display.text = text
+            }else{
+                operator=' '
+                display.text = num1
+            }
+        }
+    }
+    fun setDecimal(){
+        if(operator==' '&&!num1.contains(".")){setNumber('.')}
+        if(operator!=' '&&!num2.contains(".")){setNumber('.')}
+    }
+    fun plusandMinus(){
+        if(operator==' '){
+            num1 = if(num1.startsWith("-")){
+                num1.substring(1, num1.length)
+            } else{
+                "-$num1"
+            }
+            display.text = num1
+        }else{
+            num2 = if(num2.startsWith("-")){
+                num2.substring(1, num2.length)
+            } else{
+                "-$num2"
+            }
+            val text = num1 + operator + num2
+            display.text = text
+        }
+    }
 }
